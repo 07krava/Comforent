@@ -1,0 +1,12 @@
+package org.comforent.service;
+
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+
+public interface UserService {
+
+    void uploadProfilePicture(Long userId, MultipartFile file) throws IOException;
+
+    String getProfilePicture(Long userId);
+}
