@@ -32,7 +32,8 @@ jobs:
       - name: Build and analyze with Maven
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B verify sonar:sonar -DskipTests \
+        run: |
+          mvn -B verify sonar:sonar -DskipTests \
             -Dsonar.projectKey=07krava_Comforent \
             -Dsonar.organization=07krava \
             -Dsonar.host.url=https://sonarcloud.io \
