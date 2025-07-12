@@ -1,5 +1,6 @@
 package org.comforent.auth;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,7 +20,7 @@ public class RegisterRequest {
 //    @Pattern(regexp = "[A-Z][a-z]+",
 //        message = "Must start with a capital letter followed by one or more lowercase letters")
     private String lastname;
-    @Pattern(regexp = "[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}", message = "Invalid email")
+    @Email(message = "Must be a valid e-mail address")
     private String email;
     private String password;
     private String phone;
