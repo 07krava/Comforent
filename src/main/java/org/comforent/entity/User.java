@@ -1,6 +1,7 @@
 package org.comforent.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
 import lombok.*;
 import org.comforent.enums.Role;
 import jakarta.validation.constraints.Pattern;
@@ -32,7 +33,7 @@ public class User {
     @Column(nullable = false)
     private String lastname;
 
-    @Pattern(regexp = "[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}", message = "Must be a valid e-mail address")
+    @Email(message = "Must be a valid e-mail address")
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
