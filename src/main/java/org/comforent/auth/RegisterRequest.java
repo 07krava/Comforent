@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.comforent.validation.ValidPhoneNumber;
+import org.comforent.validation.ValidationPatterns;
 
 @Data
 @Builder
@@ -15,22 +16,14 @@ import org.comforent.validation.ValidPhoneNumber;
 @NoArgsConstructor
 public class RegisterRequest {
     @NotBlank(message = "First name is required")
-    @Pattern(
-        regexp = "^[A-ZА-Я][a-zа-я]+(-[A-ZА-Я]?[a-zа-я]+)*$",
-        message = "First name must start with a capital letter and contain only letters or hyphens (not at the start or end)"
-    )
+    @Pattern(regexp = ValidationPatterns.NAME_PATTERN, message = ValidationPatterns.NAME_MESSAGE)
     private String firstname;
-
     @NotBlank(message = "Last name is required")
-    @Pattern(
-        regexp = "^[A-ZА-Я][a-zа-я]+(-[A-ZА-Я]?[a-zа-я]+)*$",
-        message = "Last name must start with a capital letter and contain only letters or hyphens (not at the start or end)"
-    )
+    @Pattern(regexp = ValidationPatterns.NAME_PATTERN, message = ValidationPatterns.NAME_MESSAGE)
     private String lastname;
     @Email(message = "Must be a valid e-mail address")
     private String email;
     private String password;
-
     @ValidPhoneNumber
     private String phone;
 }
