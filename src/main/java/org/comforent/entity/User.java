@@ -23,13 +23,9 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-//    @Pattern(regexp = "[A-Z][a-z]+",
-//        message = "Must start with a capital letter followed by one or more lowercase letters")
     @Column(nullable = false)
     private String firstname;
 
-//    @Pattern(regexp = "[A-Z][a-z]+",
-//        message = "Must start with a capital letter followed by one or more lowercase letters")
     @Column(nullable = false)
     private String lastname;
 

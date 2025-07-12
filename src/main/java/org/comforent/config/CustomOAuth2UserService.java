@@ -44,7 +44,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     .password(new BCryptPasswordEncoder().encode(UUID.randomUUID().toString()))
                     .role(Set.of(Role.USER))
                     .build();
-                return userRepository.save(newUser); // здесь может выброситься ConstraintViolationException
+                return userRepository.save(newUser);
             });
 
             return new DefaultOAuth2User(

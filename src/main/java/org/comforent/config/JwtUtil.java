@@ -28,7 +28,7 @@ public class JwtUtil {
         return Jwts.builder()
             .setSubject(username)
             .setIssuer("mujwttoken")
-            .claim("roles", roles)  // записываем роли в токен
+            .claim("roles", roles)
             .setIssuedAt(new Date())
             .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
             .signWith(getSigningKey(), SignatureAlgorithm.HS256)
@@ -43,7 +43,6 @@ public class JwtUtil {
                 .parseClaimsJws(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
-            // логировать ошибку
             return false;
         }
     }
