@@ -1,20 +1,40 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function useAuthUser() {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('jwt_token');
-    const userData = localStorage.getItem('user');
-
-    if (token && userData) {
-      try {
-        setUser(JSON.parse(userData));
-      } catch (e) {
-        console.error('Invalid user data in localStorage');
+    const fetchUser = async () => {
+      const token = localStorage.getItem('jwt_token');
+      if (!token) {
+        setLoading(false);
+        return;
       }
-    }
+
+      try {
+        const res = await fetch('http://localhost:8080/api/user/me', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+           console.log('User fetched:', data);
+          setUser(data);
+        } else {
+          setUser(null);
+        }
+      } catch (err) {
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
   }, []);
 
-  return user;
+  return { user, loading }; // ✅ ОБЪЕКТ
 }

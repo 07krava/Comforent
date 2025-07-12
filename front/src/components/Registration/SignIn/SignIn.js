@@ -1,8 +1,18 @@
 import React, { useState } from 'react';
 import { styled } from '@mui/material/styles';
 import HeaderRegister from '../HeaderRegister/HeaderRegister';
-import { TextField, Typography, Button, Divider, Box } from '@mui/material';
+import {
+  TextField,
+  Typography,
+  Button,
+  Divider,
+  Box,
+  InputAdornment,
+  IconButton,
+} from '@mui/material';
 import Footer from '../../Footer/Footer';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 const PageWrapper = styled(Box)(() => ({
   display: 'flex',
@@ -48,20 +58,21 @@ const ContinueButton = styled(Button)(() => ({
 }));
 
 const GoogleButton = styled(Button)(() => ({
+  background: '#1e90ff',
   marginTop: '10px',
   width: '300px',
+  color: '#fff',
   fontFamily: 'Montserrat',
   textTransform: 'none',
-  backgroundColor: '#4285F4',
-  color: '#fff',
   '&:hover': {
-    backgroundColor: '#357ae8',
+    background: '#1c86ee',
   },
 }));
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSignIn = async (e) => {
     e.preventDefault();
@@ -76,7 +87,7 @@ export default function SignIn() {
         const data = await response.json();
         localStorage.setItem('jwt_token', data.token);
         alert('Login successful!');
-        window.location.href = '/';
+        window.location.href = '/user-home';
       } else {
         const errorText = await response.text();
         alert(`Login failed: ${errorText}`);
@@ -88,6 +99,10 @@ export default function SignIn() {
 
   const handleGoogleLogin = () => {
     window.location.href = 'http://localhost:8080/oauth2/authorization/google';
+  };
+
+  const toggleShowPassword = () => {
+    setShowPassword((prev) => !prev);
   };
 
   return (
@@ -112,9 +127,22 @@ export default function SignIn() {
           />
           <TextFieldStyle
             placeholder="Enter your password"
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={toggleShowPassword}
+                    edge="end"
+                    aria-label="toggle password visibility"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
           />
           <ContinueButton type="submit">Continue with email</ContinueButton>
 

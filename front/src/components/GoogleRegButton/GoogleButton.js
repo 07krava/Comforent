@@ -1,8 +1,5 @@
 import React from 'react'
 import googleImage from '../../assets/img/7123025_logo_google_g_icon.png';
-import { LoginSocialGoogle } from 'reactjs-social-login';
-
-const clientId = "957026833321-pu3bno4vjkmdp27quke4ssrduuad6odv.apps.googleusercontent.com"
 
 export default function GoogleButton() {
   return (

@@ -130,6 +130,12 @@
             <artifactId>spring-boot-starter-oauth2-client</artifactId>
             <version>3.5.3</version>
         </dependency>
+        <dependency>
+            <groupId>com.googlecode.libphonenumber</groupId>
+            <artifactId>libphonenumber</artifactId>
+            <version>8.13.24</version> <!-- или последнюю версию -->
+        </dependency>
+
     </dependencies>
 
     <build>

@@ -7,6 +7,11 @@ import AppleButton from '../../AppleRegButton/AppleButton';
 import FaceBookButton from '../../FaceBookRegButton/FaceBookButton';
 import GoogleButton from '../../GoogleRegButton/GoogleButton';
 import { useNavigate } from 'react-router-dom';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import InputAdornment from '@mui/material/InputAdornment';
+import IconButton from '@mui/material/IconButton';
+import { isValidPhoneNumber, validateFirstName, validateLastName, validateEmail } from '../../../utils/validations';
 
 const TextFieldStyle = styled(TextField)(({ theme }) => ({
     width: '300px',
@@ -20,7 +25,6 @@ const TextFieldStyle = styled(TextField)(({ theme }) => ({
 const FormStyle = styled('form')(({ theme }) => ({
     width: '400px',
     maxWidth: '400px',
-    //border: '1px solid black',
     height: '300px',
     right: '-760px',
     position: 'relative',
@@ -32,7 +36,7 @@ const FormStyle = styled('form')(({ theme }) => ({
 
 const FooterContainer = styled('div')({
     marginLeft: '-80px',
-    marginTop: '-20px', // поднимаем на 10 пикселей
+    marginTop: '-20px',
 });
 
 const ContinueButton = styled(Button)(({ theme }) => ({
@@ -70,72 +74,109 @@ const IconStyle = styled('div')(({ theme }) => ({
 }))
 
 export default function Register() {
-    const [firstName, setFirstName] = useState('');
-    const [lastName, setLastName] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [phone, setPhone] = useState('');
+   const [firstName, setFirstName] = useState('');
+  const [firstNameError, setFirstNameError] = useState('');
 
-    const navigate = useNavigate();
+  const [lastName, setLastName] = useState('');
+  const [lastNameError, setLastNameError] = useState('');
 
+  const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
 
-    const handleFirstNameChange = (e) => {
-        setFirstName(e.target.value);
+  const [password, setPassword] = useState('');
+  // Можно добавить пароль ошибку при необходимости
+
+  const [phone, setPhone] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+
+  const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
+
+  // Валидация и установка ошибки для каждого поля
+  const handleFirstNameChange = (e) => {
+    const value = e.target.value;
+    setFirstName(value);
+    setFirstNameError(validateFirstName(value));
+  };
+
+  const handleLastNameChange = (e) => {
+    const value = e.target.value;
+    setLastName(value);
+    setLastNameError(validateLastName(value));
+  };
+
+  const handleEmailChange = (e) => {
+    const value = e.target.value;
+    setEmail(value);
+    setEmailError(validateEmail(value));
+  };
+
+  const handlePasswordChange = (e) => {
+    setPassword(e.target.value);
+    // Можно добавить валидацию пароля
+  };
+
+  const handlePhoneChange = (e) => {
+    const value = e.target.value;
+    setPhone(value);
+    if (!isValidPhoneNumber(value)) {
+      setPhoneError('Invalid phone number');
+    } else {
+      setPhoneError('');
+    }
+  };
+
+  const toggleShowPassword = () => {
+    setShowPassword((prev) => !prev);
+  };
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+
+    // Перед отправкой формы проверяем все ошибки:
+    const fnError = validateFirstName(firstName);
+    const lnError = validateLastName(lastName);
+    const emError = validateEmail(email);
+    const phError = isValidPhoneNumber(phone) ? '' : 'Invalid phone number';
+
+    setFirstNameError(fnError);
+    setLastNameError(lnError);
+    setEmailError(emError);
+    setPhoneError(phError);
+
+    if (fnError || lnError || emError || phError) {
+      // Если есть ошибки — не отправляем форму
+      alert('Please fix the errors in the form');
+      return;
     }
 
-    const handleLastNameCharge = (e) => {
-        setLastName(e.target.value);
-    }
-
-    const handleEmailCharge = (e) => {
-        setEmail(e.target.value);
-    }
-
-    const handlePasswordChange = (e) => {
-        setPassword(e.target.value);
-    }
-
-    const handlePhoneCharge = (e) => {
-        setPhone(e.target.value);
-    }
-
-    const handleRegister = async (e) => {
-        e.preventDefault();
-
-        // Находим ближайшую к кнопке "Continue with email" форму
-        const form = e.target.closest("form");
-        const formData = new FormData(form);
-
-        const updatedRequestBody = {
-            firstname: formData.get('firstname') || firstName,
-            lastname: formData.get('lastname') || lastName,
-            email: formData.get('email') || email,
-            password: formData.get('password') || password,
-            phone: formData.get('phone') || phone,
-        };
-
-        try {
-            const response = await fetch('/api/auth/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatedRequestBody),
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Registration successful:', data);
-                alert('Registration successful!');
-                navigate('/')
-            } else {
-                const errorText = await response.text();
-                console.error('Registration failed:', errorText);
-                alert(`Registration failed: ${errorText}`);
-            }
-        } catch (error) {
-            console.error('Error during registration:', error);
-            alert('Error during registration');
-        }
+    const updatedRequestBody = {
+      firstname: firstName,
+      lastname: lastName,
+      email: email,
+      password: password,
+      phone: phone,
     };
+
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedRequestBody),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        alert('Registration successful!');
+        navigate('/');
+      } else {
+        const errorText = await response.text();
+        alert(`Registration failed: ${errorText}`);
+      }
+    } catch (error) {
+      alert('Error during registration');
+    }
+  };
 
     return (
         <div>
@@ -157,12 +198,14 @@ export default function Register() {
                 }}>
                     First name
                 </Typography>
-                <TextFieldStyle
-                    placeholder="Enter your first name" // Используем placeholder вместо label
-                    value={firstName} // Привязываем значение поля к состоянию
-                    onChange={handleFirstNameChange} // Отслеживаем изменения в поле
-                >
-                </TextFieldStyle>
+               <TextFieldStyle
+                    placeholder="Enter your first name"
+                    value={firstName}
+                    onChange={handleFirstNameChange}
+                    error={!!firstNameError}
+                    helperText={firstNameError}
+                    name="firstname"
+                />
 
                 {/* Last name field*/}
                 <Typography style={{
@@ -173,11 +216,13 @@ export default function Register() {
                     Last name
                 </Typography>
                 <TextFieldStyle
-                    placeholder='Enter your last name'
+                    placeholder="Enter your last name"
                     value={lastName}
-                    onChange={handleLastNameCharge}
-                >
-                </TextFieldStyle>
+                    onChange={handleLastNameChange}
+                    error={!!lastNameError}
+                    helperText={lastNameError}
+                    name="lastname"
+                />
 
                 {/* Email field*/}
                 <Typography style={{
@@ -190,9 +235,11 @@ export default function Register() {
                 <TextFieldStyle
                     placeholder="Enter your email address"
                     value={email}
-                    onChange={handleEmailCharge}
-                >
-                </TextFieldStyle>
+                    onChange={handleEmailChange}
+                    error={!!emailError}
+                    helperText={emailError}
+                    name="email"
+                />
 
                 {/* Password field*/}
                 <Typography style={{
@@ -203,11 +250,24 @@ export default function Register() {
                     Password
                 </Typography>
                 <TextFieldStyle
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={handlePasswordChange}
-                >
-                </TextFieldStyle>
+                placeholder="Enter your password"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={handlePasswordChange}
+                InputProps={{
+                    endAdornment: (
+                    <InputAdornment position="end">
+                        <IconButton
+                        onClick={toggleShowPassword}
+                        edge="end"
+                        aria-label="toggle password visibility"
+                        >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                    </InputAdornment>
+                    ),
+                }}
+                />
 
                 {/* Phone field*/}
                 <Typography style={{
@@ -217,13 +277,14 @@ export default function Register() {
                 }}>
                     Phone number
                 </Typography>
-                <TextFieldStyle
+               <TextFieldStyle
                     placeholder="Enter your phone number"
                     value={phone}
-                    onChange={handlePhoneCharge}
-                >
-                </TextFieldStyle>
-
+                    onChange={handlePhoneChange}
+                    error={!!phoneError}
+                    helperText={phoneError}
+                    name="phone"
+                />
                 <ContinueButton onClick={handleRegister}>
                     Continue with email
                 </ContinueButton>

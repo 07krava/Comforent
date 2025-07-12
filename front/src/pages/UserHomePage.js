@@ -2,18 +2,19 @@ import React from 'react';
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import Header from '../components/Header/Header';
 import Footer from '../components/Footer/Footer';
-import useAuthUser from '../hooks/useAuthUser';
+import useAuthUser from '../components/hooks/useAuthUser';
 
 const theme = createTheme();
 
 export default function UserHomePage() {
-  const user = useAuthUser();
+  const { user, loading } = useAuthUser();
 
   const handleLogout = () => {
     localStorage.removeItem('jwt_token');
-    localStorage.removeItem('user');
-    window.location.href = '/signin'; // или navigate('/signin')
+    window.location.href = '/';
   };
+
+  if (loading) return <div>Loading...</div>;
 
   return (
     <ThemeProvider theme={theme}>
@@ -22,4 +23,3 @@ export default function UserHomePage() {
     </ThemeProvider>
   );
 }
-

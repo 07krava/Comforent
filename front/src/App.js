@@ -7,6 +7,7 @@ import SignIn from './components/Registration/SignIn/SignIn';
 import RentOut from './pages/RentOut';
 import OAuth2Error from './components/errors/OAuth2Error';
 import OAuth2RedirectHandler from './components/Registration/OAuth2Redirect/OAuth2RedirectHandler'; 
+import UserHomePage from './pages/UserHomePage';
 
 
 const theme = createTheme();
@@ -24,6 +25,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/register" element={<Register />} />
           <Route path="/signin" element={<SignIn />} />
+          <Route path="/user-home" element={<UserHomePage />} />
           <Route path="/create_housing" element={<RentOut />} />
           <Route path="/oauth2/error" element={<OAuth2Error />} />
           <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />

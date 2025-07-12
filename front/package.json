@@ -16,6 +16,7 @@
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.7.2",
     "dayjs": "^1.11.12",
+    "libphonenumber-js": "^1.12.9",
     "react": "^18.3.1",
     "react-datepicker": "^7.3.0",
     "react-dom": "^18.3.1",
@@ -25,6 +26,7 @@
     "reactjs-social-login": "^2.6.3",
     "save": "^2.9.0",
     "styled-components": "^6.1.12",
+    "typescript": "^5.8.3",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
