@@ -9,15 +9,23 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @Configuration
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
+    private final CustomOAuth2UserService oAuth2UserService;
     private final CustomUserDetailsService userDetailsService;
+    private final OAuth2AuthenticationSuccessHandler successHandler;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, CustomUserDetailsService userDetailsService) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, CustomOAuth2UserService oAuth2UserService, CustomUserDetailsService userDetailsService, OAuth2AuthenticationSuccessHandler successHandler) {
         this.jwtAuthFilter = jwtAuthFilter;
+        this.oAuth2UserService = oAuth2UserService;
         this.userDetailsService = userDetailsService;
+        this.successHandler = successHandler;
     }
 
     @Bean
@@ -25,14 +33,31 @@ public class SecurityConfig {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll() // например, эндпоинты регистрации и логина
+                .requestMatchers("/api/auth/**", "/oauth2/**", "/login/oauth2/**").permitAll() // например, эндпоинты регистрации и логина
                 .anyRequest().authenticated()
             )
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            );
+            .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .oauth2Login(oauth -> oauth
+                .userInfoEndpoint(user -> user.userService(oAuth2UserService))
+                .successHandler(successHandler)
+                .failureHandler((request, response, exception) -> {
+                    String message = exception.getMessage();
 
-        http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                    if (message != null && message.contains("ConstraintViolationException")) {
+                        message = "Некорректные данные пользователя от Google. Возможно, имя или фамилия не соответствуют требованиям.";
+                    } else if (message == null || message.isBlank()) {
+                        message = "Произошла ошибка при авторизации через Google.";
+                    }
+
+                    String redirectUrl = UriComponentsBuilder
+                        .fromUriString("http://localhost:3000/oauth2/error")
+                        .queryParam("message", URLEncoder.encode(message, StandardCharsets.UTF_8))
+                        .build().toUriString();
+
+                    response.sendRedirect(redirectUrl);
+                })
+            )
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
