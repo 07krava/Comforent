@@ -25,12 +25,19 @@ public class OAuth2ErrorController {
     }
 
     @GetMapping("/error")
-    public ResponseEntity<Map<String, String>> handleError(@RequestParam(required = false) String message,
-                                                           Locale locale) {
-        // Если параметр message отсутствует, получаем локализованное сообщение из properties
-        String errorMsg = (message != null && !message.isEmpty())
-            ? message
-            : messageSource.getMessage("oauth2.error.default", null, "OAuth2 authorization failed", locale);
+    public ResponseEntity<Map<String, String>> handleError(@RequestParam(required = false) String code,
+                                                           Locale locale) {// Используем код вместо "message" и получаем из messages.properties
+        String errorMsg;
+
+        if (code != null && !code.isEmpty()) {
+            try {
+                errorMsg = messageSource.getMessage(code, null, locale);
+            } catch (Exception e) {
+                errorMsg = messageSource.getMessage("oauth2.error.default", null, "OAuth2 authorization failed", locale);
+            }
+        } else {
+            errorMsg = messageSource.getMessage("oauth2.error.default", null, "OAuth2 authorization failed", locale);
+        }
 
         logger.warn("OAuth2 authentication error occurred");
 
