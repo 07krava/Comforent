@@ -18,7 +18,6 @@ import java.util.Set;
 @RestController
 @RequestMapping("/oauth2")
 public class OAuth2ErrorController {
-
     private final MessageSource messageSource;
     private static final Logger logger = LoggerFactory.getLogger(OAuth2ErrorController.class);
 
@@ -40,11 +39,18 @@ public class OAuth2ErrorController {
 
         String errorMsg;
 
+        // Очищаем пользовательский ввод 'code' в начале метода,
+        // чтобы использовать очищенную версию для всех лог-сообщений.
+        // Заменяем символы новой строки и табуляции на подчеркивание.
+        String sanitizedCodeForLog = (code != null) ? code.replaceAll("[\n\r\t]", "_") : "null";
+
+
         if (code != null && !code.trim().isEmpty() && allowedErrorCodes.contains(code)) {
             try {
                 errorMsg = messageSource.getMessage(code, null, locale);
             } catch (NoSuchMessageException e) {
-                logger.debug("Message not found for code: {}, using default", code);
+                // Используем очищенный код для логирования, чтобы предотвратить инъекции.
+                logger.debug("Message not found for code: {}, using default", sanitizedCodeForLog);
                 errorMsg = messageSource.getMessage(defaultKey, null, defaultMessage, locale);
             }
         } else {
@@ -53,9 +59,10 @@ public class OAuth2ErrorController {
 
         logger.warn("OAuth2 authentication error occurred");
 
+        // Этот блок уже использовал очистку, но теперь мы используем общую переменную
+        // sanitizedCodeForLog для единообразия.
         if (logger.isDebugEnabled() && code != null) {
-            String sanitizedCode = code.replaceAll("[\n\r\t]", "_");
-            logger.debug("Received OAuth2 error code: {}", sanitizedCode);
+            logger.debug("Received OAuth2 error code: {}", sanitizedCodeForLog);
         }
 
         return ResponseEntity
