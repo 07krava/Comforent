@@ -32,7 +32,7 @@ public class OAuth2ErrorController {
             ? message
             : messageSource.getMessage("oauth2.error.default", null, "OAuth2 authorization failed", locale);
 
-        logger.warn("OAuth2 authentication error: {}", errorMsg);
+        logger.warn("OAuth2 authentication error occurred");
 
         return ResponseEntity
             .status(HttpStatus.UNAUTHORIZED)
