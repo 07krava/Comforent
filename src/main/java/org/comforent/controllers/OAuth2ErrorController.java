@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 @RestController
@@ -21,6 +22,7 @@ public class OAuth2ErrorController {
     private final MessageSource messageSource;
     private static final Logger logger = LoggerFactory.getLogger(OAuth2ErrorController.class);
 
+    // Белый список допустимых error code
     private static final Set<String> allowedErrorCodes = Set.of(
         "oauth2.error.invalid_token",
         "oauth2.error.access_denied",
@@ -38,11 +40,27 @@ public class OAuth2ErrorController {
         return allowedErrorCodes.contains(code);
     }
 
-    private String getSafeMessage(String code, Locale locale) {
+    /**
+     * Безопасно возвращает сообщение по коду ошибки.
+     */
+    private Optional<String> getSafeMessage(String code, Locale locale) {
         if (!isAllowedErrorCode(code)) {
-            throw new IllegalArgumentException("Disallowed error code");
+            return Optional.empty();
         }
-        return messageSource.getMessage(code, null, locale);
+
+        try {
+            return Optional.of(messageSource.getMessage(code, null, locale));
+        } catch (NoSuchMessageException e) {
+            logger.debug("Message not found for code: {}", sanitize(code));
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Санитизация строки для логирования (без \n, \r, табов и других escape-последовательностей).
+     */
+    private String sanitize(String input) {
+        return input == null ? "null" : input.replaceAll("[\n\r\t]", "_");
     }
 
     @GetMapping("/error")
@@ -51,26 +69,17 @@ public class OAuth2ErrorController {
         final String defaultMessage = "OAuth2 authorization failed";
         final String defaultKey = "oauth2.error.default";
 
-        String sanitizedCodeForLog = (code != null) ? code.replaceAll("[\n\r\t]", "_") : "null";
-        String errorMsg;
-
-        if (code != null && !code.trim().isEmpty() && isAllowedErrorCode(code)) {
-            try {
-                // Обеспечиваем вызов только с безопасным кодом из белого списка
-                errorMsg = getSafeMessage(code, locale);
-            } catch (NoSuchMessageException e) {
-                logger.debug("Message not found for code: {}, using default", sanitizedCodeForLog);
-                errorMsg = messageSource.getMessage(defaultKey, null, defaultMessage, locale);
-            }
-        } else {
-            errorMsg = messageSource.getMessage(defaultKey, null, defaultMessage, locale);
-        }
+        String sanitizedCode = sanitize(code);
 
         logger.warn("OAuth2 authentication error occurred");
 
-        if (logger.isDebugEnabled() && code != null) {
-            logger.debug("Received OAuth2 error code: {}", sanitizedCodeForLog);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Received OAuth2 error code: {}", sanitizedCode);
         }
+
+        // Получаем сообщение из messageSource безопасно
+        String errorMsg = getSafeMessage(code, locale)
+            .orElseGet(() -> messageSource.getMessage(defaultKey, null, defaultMessage, locale));
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", errorMsg));
     }
