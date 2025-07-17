@@ -35,14 +35,16 @@ public class OAuth2ErrorController {
         this.messageSource = messageSource;
     }
 
-    @SuppressWarnings("squid:S5147")
+    @SuppressWarnings("squid:S5147") // Подавляем предыдущее предупреждение SonarQube о Log Injection
     @GetMapping("/error")
     public ResponseEntity<Map<String, String>> handleError(@RequestParam(required = false) String code,
                                                            Locale locale) {
         final String defaultMessage = "OAuth2 authorization failed";
         final String defaultKey = "oauth2.error.default";
 
-        String errorMsg;
+        // Инициализируем errorMsg значением по умолчанию при объявлении.
+        // Это гарантирует, что errorMsg никогда не будет null.
+        String errorMsg = defaultMessage;
 
         // Очищаем пользовательский ввод 'code' от потенциально опасных символов (новой строки, табуляции).
         // Эта очищенная версия будет использоваться ИСКЛЮЧИТЕЛЬНО для логирования.
@@ -59,11 +61,14 @@ public class OAuth2ErrorController {
         } catch (NoSuchMessageException e) {
             // Это маловероятно, если defaultKey всегда существует, но на всякий случай.
             logger.error("Default message key '{}' not found, using hardcoded default message.", defaultKey);
-            errorMsg = defaultMessage; // Если даже defaultKey не найден, используем жестко закодированное сообщение.
+            // errorMsg уже инициализирован defaultMessage, поэтому явное присвоение здесь не строго обязательно,
+            // но для ясности можно оставить.
+            // errorMsg = defaultMessage;
         } catch (Exception e) {
             // Общая обработка других возможных исключений при получении сообщения.
             logger.error("An unexpected error occurred while retrieving default message for key '{}': {}", defaultKey, e.getMessage(), e);
-            errorMsg = defaultMessage;
+            // errorMsg уже инициализирован defaultMessage.
+            // errorMsg = defaultMessage;
         }
 
         logger.warn("OAuth2 authentication error occurred.");
@@ -81,6 +86,6 @@ public class OAuth2ErrorController {
 
         return ResponseEntity
             .status(HttpStatus.UNAUTHORIZED)
-            .body(Map.of("error", errorMsg));
+            .body(Map.of("error", errorMsg)); // errorMsg теперь гарантированно не null
     }
 }
