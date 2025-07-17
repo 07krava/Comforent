@@ -31,25 +31,29 @@ public class OAuth2ErrorController {
         this.messageSource = messageSource;
     }
 
+    /**
+     * Проверяет, входит ли переданный код ошибки в белый список разрешённых кодов.
+     */
+    private boolean isAllowedErrorCode(String code) {
+        return allowedErrorCodes.contains(code);
+    }
+
     @GetMapping("/error")
     public ResponseEntity<Map<String, String>> handleError(@RequestParam(required = false) String code,
                                                            Locale locale) {
         final String defaultMessage = "OAuth2 authorization failed";
         final String defaultKey = "oauth2.error.default";
 
-        String errorMsg;
-
-        // Очищаем пользовательский ввод 'code' в начале метода,
-        // чтобы использовать очищенную версию для всех лог-сообщений.
-        // Заменяем символы новой строки и табуляции на подчеркивание.
+        // Очищаем код для безопасного логирования — заменяем символы перевода строки и табуляции
         String sanitizedCodeForLog = (code != null) ? code.replaceAll("[\n\r\t]", "_") : "null";
 
+        String errorMsg;
 
-        if (code != null && !code.trim().isEmpty() && allowedErrorCodes.contains(code)) {
+        // Проверяем, что код не пуст и находится в белом списке
+        if (code != null && !code.trim().isEmpty() && isAllowedErrorCode(code)) {
             try {
                 errorMsg = messageSource.getMessage(code, null, locale);
             } catch (NoSuchMessageException e) {
-                // Используем очищенный код для логирования, чтобы предотвратить инъекции.
                 logger.debug("Message not found for code: {}, using default", sanitizedCodeForLog);
                 errorMsg = messageSource.getMessage(defaultKey, null, defaultMessage, locale);
             }
@@ -57,10 +61,10 @@ public class OAuth2ErrorController {
             errorMsg = messageSource.getMessage(defaultKey, null, defaultMessage, locale);
         }
 
+        // Логируем факт ошибки без вставки пользовательских данных — безопасно
         logger.warn("OAuth2 authentication error occurred");
 
-        // Этот блок уже использовал очистку, но теперь мы используем общую переменную
-        // sanitizedCodeForLog для единообразия.
+        // Логируем код ошибки в DEBUG режиме, используя очищенный код для предотвращения лог-инъекций
         if (logger.isDebugEnabled() && code != null) {
             logger.debug("Received OAuth2 error code: {}", sanitizedCodeForLog);
         }
