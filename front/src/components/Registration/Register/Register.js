@@ -11,7 +11,7 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import InputAdornment from '@mui/material/InputAdornment';
 import IconButton from '@mui/material/IconButton';
-import { isValidPhoneNumber, validateFirstName, validateLastName, validateEmail } from '../../../utils/validations';
+import { isValidPhoneNumber, validateFirstName, validateLastName, validateEmail, validatePassword } from '../../../utils/validations';
 
 const TextFieldStyle = styled(TextField)(({ theme }) => ({
     width: '300px',
@@ -71,112 +71,143 @@ const IconStyle = styled('div')(({ theme }) => ({
     fontSize: '20px',
     padding: '10px',
     color: '#1773cd',
-}))
+    coursor: 'pointer',
+    transition: 'box-shadow 0.2s, background 0.2s, border-color 0.2s',
+    '&:hover': {
+        boxShadow: '0 0 8px #1773cd33',
+        background: '#f0f8ff',
+        borderColor: '#1773cd',
+},
+}));
 
 export default function Register() {
-   const [firstName, setFirstName] = useState('');
-  const [firstNameError, setFirstNameError] = useState('');
+    const [firstName, setFirstName] = useState('');
+    const [firstNameError, setFirstNameError] = useState('');
 
-  const [lastName, setLastName] = useState('');
-  const [lastNameError, setLastNameError] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [lastNameError, setLastNameError] = useState('');
 
-  const [email, setEmail] = useState('');
-  const [emailError, setEmailError] = useState('');
+    const [email, setEmail] = useState('');
+    const [emailError, setEmailError] = useState('');
 
-  const [password, setPassword] = useState('');
-  // Можно добавить пароль ошибку при необходимости
+    const [password, setPassword] = useState('');
+    const [passwordError, setPasswordError] = useState('');
 
-  const [phone, setPhone] = useState('');
-  const [phoneError, setPhoneError] = useState('');
+    const [phone, setPhone] = useState('');
+    const [phoneError, setPhoneError] = useState('');
 
-  const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate();
+    const [showPassword, setShowPassword] = useState(false);
+    const [serverError, setServerError] = useState('');
 
-  // Валидация и установка ошибки для каждого поля
-  const handleFirstNameChange = (e) => {
-    const value = e.target.value;
-    setFirstName(value);
-    setFirstNameError(validateFirstName(value));
-  };
+    const navigate = useNavigate();
 
-  const handleLastNameChange = (e) => {
-    const value = e.target.value;
-    setLastName(value);
-    setLastNameError(validateLastName(value));
-  };
-
-  const handleEmailChange = (e) => {
-    const value = e.target.value;
-    setEmail(value);
-    setEmailError(validateEmail(value));
-  };
-
-  const handlePasswordChange = (e) => {
-    setPassword(e.target.value);
-    // Можно добавить валидацию пароля
-  };
-
-  const handlePhoneChange = (e) => {
-    const value = e.target.value;
-    setPhone(value);
-    if (!isValidPhoneNumber(value)) {
-      setPhoneError('Invalid phone number');
-    } else {
-      setPhoneError('');
-    }
-  };
-
-  const toggleShowPassword = () => {
-    setShowPassword((prev) => !prev);
-  };
-
-  const handleRegister = async (e) => {
-    e.preventDefault();
-
-    // Перед отправкой формы проверяем все ошибки:
-    const fnError = validateFirstName(firstName);
-    const lnError = validateLastName(lastName);
-    const emError = validateEmail(email);
-    const phError = isValidPhoneNumber(phone) ? '' : 'Invalid phone number';
-
-    setFirstNameError(fnError);
-    setLastNameError(lnError);
-    setEmailError(emError);
-    setPhoneError(phError);
-
-    if (fnError || lnError || emError || phError) {
-      // Если есть ошибки — не отправляем форму
-      alert('Please fix the errors in the form');
-      return;
-    }
-
-    const updatedRequestBody = {
-      firstname: firstName,
-      lastname: lastName,
-      email: email,
-      password: password,
-      phone: phone,
+    // Валидация и установка ошибки для каждого поля
+    const handleFirstNameChange = (e) => {
+        const value = e.target.value;
+        setFirstName(value);
+        setFirstNameError(validateFirstName(value));
     };
 
-    try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedRequestBody),
-      });
+    const handleLastNameChange = (e) => {
+        const value = e.target.value;
+        setLastName(value);
+        setLastNameError(validateLastName(value));
+    };
 
-      if (response.ok) {
-        const data = await response.json();
-        alert('Registration successful!');
-        navigate('/');
-      } else {
-        const errorText = await response.text();
-        alert(`Registration failed: ${errorText}`);
-      }
-    } catch (error) {
-      alert('Error during registration');
-    }
-  };
+    const handleEmailChange = (e) => {
+        const value = e.target.value;
+        setEmail(value);
+        setEmailError(validateEmail(value));
+    };
+
+    const handlePasswordChange = (e) => {
+        const value = e.target.value;
+        setPassword(value);
+        setPasswordError(validatePassword(value));
+    };
+
+    const handlePhoneChange = (e) => {
+        const value = e.target.value;
+        setPhone(value);
+        if (!isValidPhoneNumber(value)) {
+            setPhoneError('Invalid phone number');
+        } else {
+            setPhoneError('');
+        }
+    };
+
+    const toggleShowPassword = () => {
+        setShowPassword((prev) => !prev);
+    };
+
+    const handleRegister = async (e) => {
+        e.preventDefault();
+
+        setServerError('');
+
+        // Перед отправкой формы проверяем все ошибки:
+        const fnError = validateFirstName(firstName);
+        const lnError = validateLastName(lastName);
+        const emError = validateEmail(email);
+        const pwError = validatePassword(password);
+        const phError = isValidPhoneNumber(phone) ? '' : 'Invalid phone number';
+
+        setFirstNameError(fnError);
+        setLastNameError(lnError);
+        setEmailError(emError);
+        setPasswordError(pwError);
+        setPhoneError(phError);
+
+        if (fnError || lnError || emError || pwError || phError) {
+            // Если есть ошибки — не отправляем форму
+            alert('Please fix the errors in the form');
+            return;
+        }
+
+        const updatedRequestBody = {
+            firstname: firstName,
+            lastname: lastName,
+            email: email,
+            password: password,
+            phone: phone,
+        };
+
+        try {
+            const response = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedRequestBody),
+            });
+
+            if (response.ok) {
+                await response.json();
+                alert('Registration successful!');
+
+                setFirstName('');
+                setLastName('');
+                setEmail('');
+                setPassword('');
+                setPhone('');
+                navigate('/');
+
+                setFirstNameError('');
+                setLastNameError('');
+                setEmailError('');
+                setPasswordError('');
+                setPhoneError('');
+                setServerError('');
+
+                navigate('/');
+            } else {
+                const errorText = await response.text();
+                setServerError(errorText);
+                // alert(`Registration failed: ${errorText}`);
+            }
+        } catch (error) {
+            setServerError('Unexpected error occurred during registration');
+            // alert('Error during registration');
+        }
+    };
 
     return (
         <div>
@@ -198,7 +229,7 @@ export default function Register() {
                 }}>
                     First name
                 </Typography>
-               <TextFieldStyle
+                <TextFieldStyle
                     placeholder="Enter your first name"
                     value={firstName}
                     onChange={handleFirstNameChange}
@@ -250,23 +281,25 @@ export default function Register() {
                     Password
                 </Typography>
                 <TextFieldStyle
-                placeholder="Enter your password"
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={handlePasswordChange}
-                InputProps={{
-                    endAdornment: (
-                    <InputAdornment position="end">
-                        <IconButton
-                        onClick={toggleShowPassword}
-                        edge="end"
-                        aria-label="toggle password visibility"
-                        >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                    </InputAdornment>
-                    ),
-                }}
+                    placeholder="Enter your password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={handlePasswordChange}
+                    error={!!passwordError}
+                    helperText={passwordError}
+                    InputProps={{
+                        endAdornment: (
+                            <InputAdornment position="end">
+                                <IconButton
+                                    onClick={toggleShowPassword}
+                                    edge="end"
+                                    aria-label="toggle password visibility"
+                                >
+                                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                                </IconButton>
+                            </InputAdornment>
+                        ),
+                    }}
                 />
 
                 {/* Phone field*/}
@@ -277,7 +310,7 @@ export default function Register() {
                 }}>
                     Phone number
                 </Typography>
-               <TextFieldStyle
+                <TextFieldStyle
                     placeholder="Enter your phone number"
                     value={phone}
                     onChange={handlePhoneChange}
@@ -285,6 +318,14 @@ export default function Register() {
                     helperText={phoneError}
                     name="phone"
                 />
+
+                {/* 🟡 Вывод ошибки от сервера */}
+                {serverError && (
+                    <Typography color="error" style={{ fontSize: '14px', marginBottom: '10px' }}>
+                        {serverError}
+                    </Typography>
+                )}
+
                 <ContinueButton onClick={handleRegister}>
                     Continue with email
                 </ContinueButton>

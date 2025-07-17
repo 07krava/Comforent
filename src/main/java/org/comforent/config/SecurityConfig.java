@@ -1,5 +1,8 @@
 package org.comforent.config;
 
+import jakarta.validation.ConstraintViolationException;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,16 +19,31 @@ import java.nio.charset.StandardCharsets;
 
 @Configuration
 public class SecurityConfig {
+
+    @Value("${app.frontend.url:http://localhost:3000}")
+    private String frontendBaseUrl;
+
+    @Value("${app.frontend.oauth2.error-path}")
+    private String oauth2ErrorPath;
+
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final CustomOAuth2UserService oAuth2UserService;
     private final CustomUserDetailsService userDetailsService;
     private final OAuth2AuthenticationSuccessHandler successHandler;
+    private final MessageSource messageSource;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, CustomOAuth2UserService oAuth2UserService, CustomUserDetailsService userDetailsService, OAuth2AuthenticationSuccessHandler successHandler) {
+    public SecurityConfig(
+        JwtAuthenticationFilter jwtAuthFilter,
+        CustomOAuth2UserService oAuth2UserService,
+        CustomUserDetailsService userDetailsService,
+        OAuth2AuthenticationSuccessHandler successHandler,
+        MessageSource messageSource
+    ) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.oAuth2UserService = oAuth2UserService;
         this.userDetailsService = userDetailsService;
         this.successHandler = successHandler;
+        this.messageSource = messageSource;
     }
 
     @Bean
@@ -33,7 +51,7 @@ public class SecurityConfig {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/oauth2/**", "/login/oauth2/**").permitAll() // например, эндпоинты регистрации и логина
+                .requestMatchers("/api/auth/**", "/oauth2/**", "/login/oauth2/**").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -41,16 +59,18 @@ public class SecurityConfig {
                 .userInfoEndpoint(user -> user.userService(oAuth2UserService))
                 .successHandler(successHandler)
                 .failureHandler((request, response, exception) -> {
-                    String message = exception.getMessage();
+                    String message;
 
-                    if (message != null && message.contains("ConstraintViolationException")) {
-                        message = "Некорректные данные пользователя от Google. Возможно, имя или фамилия не соответствуют требованиям.";
-                    } else if (message == null || message.isBlank()) {
-                        message = "Произошла ошибка при авторизации через Google.";
+                    if (exception.getCause() instanceof ConstraintViolationException) {
+                        message = messageSource.getMessage(
+                            "oauth2.error.constraint.violation", null, request.getLocale());
+                    } else {
+                        message = messageSource.getMessage(
+                            "oauth2.error.generic", null, request.getLocale());
                     }
 
                     String redirectUrl = UriComponentsBuilder
-                        .fromUriString("http://localhost:3000/oauth2/error")
+                        .fromUriString(frontendBaseUrl + oauth2ErrorPath)
                         .queryParam("message", URLEncoder.encode(message, StandardCharsets.UTF_8))
                         .build().toUriString();
 

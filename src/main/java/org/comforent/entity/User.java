@@ -1,10 +1,8 @@
 package org.comforent.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
 import lombok.*;
 import org.comforent.enums.Role;
-import jakarta.validation.constraints.Pattern;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -29,7 +27,6 @@ public class User {
     @Column(nullable = false)
     private String lastname;
 
-    @Email(message = "Must be a valid e-mail address")
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 

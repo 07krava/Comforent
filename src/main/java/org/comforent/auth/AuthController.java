@@ -2,6 +2,8 @@ package org.comforent.auth;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.comforent.exceptions.exceptions.EmailAlreadyExistsException;
+import org.comforent.exceptions.exceptions.InvalidAuthenticationCredentialException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,7 +21,7 @@ public class AuthController {
         try {
             AuthenticationResponse response = authService.register(request);
             return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
+        } catch (EmailAlreadyExistsException e) {
             return ResponseEntity.badRequest().body("User with this email already exists.");
         }
     }
@@ -29,7 +31,7 @@ public class AuthController {
         try {
             AuthenticationResponse response = authService.authenticate(request);
             return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
+        } catch (InvalidAuthenticationCredentialException e) {
             return ResponseEntity.badRequest().body("Invalid credentials.");
         }
     }

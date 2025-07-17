@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.comforent.config.JwtUtil;
 import org.comforent.entity.User;
 import org.comforent.enums.Role;
+import org.comforent.exceptions.exceptions.EmailAlreadyExistsException;
+import org.comforent.exceptions.exceptions.InvalidAuthenticationCredentialException;
 import org.comforent.repository.UserRepository;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -26,7 +28,7 @@ public class AuthService {
 
         Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
         if (existingUser.isPresent()) {
-            throw new RuntimeException("User with this email already exists.");
+            throw new EmailAlreadyExistsException("User with this email already exists.");
         }
 
         User user = User.builder()
@@ -55,7 +57,7 @@ public class AuthService {
         );
 
         User user = userRepository.findByEmail(request.getEmail())
-            .orElseThrow(() -> new RuntimeException("User not found after authentication."));
+            .orElseThrow(() -> new InvalidAuthenticationCredentialException("User not found after authentication."));
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRolesAsStrings());
         return AuthenticationResponse.builder()
