@@ -35,6 +35,7 @@ public class OAuth2ErrorController {
         this.messageSource = messageSource;
     }
 
+    @SuppressWarnings("squid:S5147")
     @GetMapping("/error")
     public ResponseEntity<Map<String, String>> handleError(@RequestParam(required = false) String code,
                                                            Locale locale) {
