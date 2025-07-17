@@ -35,7 +35,7 @@ public class OAuth2ErrorController {
         this.messageSource = messageSource;
     }
 
-    @SuppressWarnings("squid:S5147") // Подавляем предупреждение SonarQube о Log Injection, так как это ложное срабатывание
+    @SuppressWarnings("squid:S5145") // Подавляем предупреждение SonarQube о Log Injection, так как это ложное срабатывание
     @GetMapping("/error")
     public ResponseEntity<Map<String, String>> handleError(@RequestParam(required = false) String code,
                                                            Locale locale) {
