@@ -38,21 +38,26 @@ public class OAuth2ErrorController {
         return allowedErrorCodes.contains(code);
     }
 
+    private String getSafeMessage(String code, Locale locale) {
+        if (!isAllowedErrorCode(code)) {
+            throw new IllegalArgumentException("Disallowed error code");
+        }
+        return messageSource.getMessage(code, null, locale);
+    }
+
     @GetMapping("/error")
     public ResponseEntity<Map<String, String>> handleError(@RequestParam(required = false) String code,
                                                            Locale locale) {
         final String defaultMessage = "OAuth2 authorization failed";
         final String defaultKey = "oauth2.error.default";
 
-        // Очищаем код для безопасного логирования — заменяем символы перевода строки и табуляции
         String sanitizedCodeForLog = (code != null) ? code.replaceAll("[\n\r\t]", "_") : "null";
-
         String errorMsg;
 
-        // Проверяем, что код не пуст и находится в белом списке
         if (code != null && !code.trim().isEmpty() && isAllowedErrorCode(code)) {
             try {
-                errorMsg = messageSource.getMessage(code, null, locale);
+                // Обеспечиваем вызов только с безопасным кодом из белого списка
+                errorMsg = getSafeMessage(code, locale);
             } catch (NoSuchMessageException e) {
                 logger.debug("Message not found for code: {}, using default", sanitizedCodeForLog);
                 errorMsg = messageSource.getMessage(defaultKey, null, defaultMessage, locale);
@@ -61,16 +66,12 @@ public class OAuth2ErrorController {
             errorMsg = messageSource.getMessage(defaultKey, null, defaultMessage, locale);
         }
 
-        // Логируем факт ошибки без вставки пользовательских данных — безопасно
         logger.warn("OAuth2 authentication error occurred");
 
-        // Логируем код ошибки в DEBUG режиме, используя очищенный код для предотвращения лог-инъекций
         if (logger.isDebugEnabled() && code != null) {
             logger.debug("Received OAuth2 error code: {}", sanitizedCodeForLog);
         }
 
-        return ResponseEntity
-            .status(HttpStatus.UNAUTHORIZED)
-            .body(Map.of("error", errorMsg));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", errorMsg));
     }
 }
