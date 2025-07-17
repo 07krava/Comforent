@@ -3,6 +3,7 @@ package org.comforent.controllers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
+import org.springframework.context.NoSuchMessageException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,16 +35,20 @@ public class OAuth2ErrorController {
     @GetMapping("/error")
     public ResponseEntity<Map<String, String>> handleError(@RequestParam(required = false) String code,
                                                            Locale locale) {
+        final String defaultMessage = "OAuth2 authorization failed";
+        final String defaultKey = "oauth2.error.default";
+
         String errorMsg;
 
-        if (code != null && !code.isEmpty() && allowedErrorCodes.contains(code)) {
+        if (code != null && !code.trim().isEmpty() && allowedErrorCodes.contains(code)) {
             try {
                 errorMsg = messageSource.getMessage(code, null, locale);
-            } catch (Exception e) {
-                errorMsg = messageSource.getMessage("oauth2.error.default", null, "OAuth2 authorization failed", locale);
+            } catch (NoSuchMessageException e) {
+                logger.debug("Message not found for code: {}, using default", code);
+                errorMsg = messageSource.getMessage(defaultKey, null, defaultMessage, locale);
             }
         } else {
-            errorMsg = messageSource.getMessage("oauth2.error.default", null, "OAuth2 authorization failed", locale);
+            errorMsg = messageSource.getMessage(defaultKey, null, defaultMessage, locale);
         }
 
         logger.warn("OAuth2 authentication error occurred");
