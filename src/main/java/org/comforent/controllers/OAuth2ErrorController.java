@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/oauth2")
@@ -19,6 +20,12 @@ public class OAuth2ErrorController {
 
     private final MessageSource messageSource;
     private static final Logger logger = LoggerFactory.getLogger(OAuth2ErrorController.class);
+
+    private static final Set<String> allowedErrorCodes = Set.of(
+        "oauth2.error.invalid_token",
+        "oauth2.error.access_denied",
+        "oauth2.error.user_cancelled"
+    );
 
     public OAuth2ErrorController(MessageSource messageSource) {
         this.messageSource = messageSource;
@@ -28,7 +35,8 @@ public class OAuth2ErrorController {
     public ResponseEntity<Map<String, String>> handleError(@RequestParam(required = false) String code,
                                                            Locale locale) {
         String errorMsg;
-        if (code != null && !code.isEmpty()) {
+
+        if (code != null && !code.isEmpty() && allowedErrorCodes.contains(code)) {
             try {
                 errorMsg = messageSource.getMessage(code, null, locale);
             } catch (Exception e) {
@@ -38,10 +46,8 @@ public class OAuth2ErrorController {
             errorMsg = messageSource.getMessage("oauth2.error.default", null, "OAuth2 authorization failed", locale);
         }
 
-        // Безопасный лог (не включает код напрямую)
         logger.warn("OAuth2 authentication error occurred");
 
-        // Логирование кода — ТОЛЬКО В DEBUG, с очисткой
         if (logger.isDebugEnabled() && code != null) {
             String sanitizedCode = code.replaceAll("[\n\r\t]", "_");
             logger.debug("Received OAuth2 error code: {}", sanitizedCode);
