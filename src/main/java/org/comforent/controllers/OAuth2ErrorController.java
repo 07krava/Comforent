@@ -23,12 +23,12 @@ public class OAuth2ErrorController {
     private static final Logger logger = LoggerFactory.getLogger(OAuth2ErrorController.class);
 
     // Определяем набор разрешенных кодов ошибок.
-    // Это критично для безопасности, чтобы не использовать произвольные строки как ключи сообщений.
+    // Эти коды будут использоваться только для логирования и внутренней логики,
+    // но НЕ напрямую как ключи для MessageSource.
     private static final Set<String> allowedErrorCodes = Set.of(
         "oauth2.error.invalid_token",
         "oauth2.error.access_denied",
-        "oauth2.error.user_cancelled",
-        "oauth2.error.default" // Включаем ключ по умолчанию в разрешенные
+        "oauth2.error.user_cancelled"
     );
 
     public OAuth2ErrorController(MessageSource messageSource) {
@@ -42,48 +42,40 @@ public class OAuth2ErrorController {
         final String defaultKey = "oauth2.error.default";
 
         String errorMsg;
-        String messageKeyToUse; // Переменная для ключа, который будет фактически использоваться в MessageSource
 
         // Очищаем пользовательский ввод 'code' от потенциально опасных символов (новой строки, табуляции).
-        // Эта очищенная версия будет использоваться для логирования.
+        // Эта очищенная версия будет использоваться ИСКЛЮЧИТЕЛЬНО для логирования.
         String sanitizedCodeForLog = (code != null) ? code.replaceAll("[\n\r\t]", "_") : "null";
 
-        // Определяем, какой ключ сообщения использовать.
-        // Мы НЕ будем напрямую использовать 'code' или 'sanitizedCodeForLog' как ключ для MessageSource,
-        // если он не является одним из наших жестко закодированных, разрешенных ключей.
-        if (code != null && !code.trim().isEmpty() && allowedErrorCodes.contains(code)) {
-            // Если оригинальный 'code' (до очистки) содержится в наших разрешенных ключах,
-            // используем его как ключ. Это безопасно, так как мы доверяем только нашим предопределенным ключам.
-            messageKeyToUse = code;
-        } else {
-            // В противном случае, всегда используем ключ по умолчанию.
-            // Это предотвращает использование любого потенциально "загрязненного" пользовательского ввода
-            // в качестве ключа для MessageSource.
-            messageKeyToUse = defaultKey;
-            logger.debug("Invalid or unallowed OAuth2 error code received: {}, defaulting to: {}", sanitizedCodeForLog, defaultKey);
-        }
+        // Определяем, является ли полученный 'code' одним из известных нам кодов ошибок.
+        // Эта переменная используется только для внутренней логики и логирования.
+        boolean isKnownErrorCode = (code != null && !code.trim().isEmpty() && allowedErrorCodes.contains(code));
 
+        // В этой версии мы ВСЕГДА будем использовать defaultKey для получения сообщения от MessageSource.
+        // Это полностью исключает возможность передачи пользовательского ввода в качестве ключа.
         try {
-            // Теперь мы передаем в messageSource.getMessage() только ключ, который гарантированно
-            // является одним из наших жестко закодированных, безопасных ключей.
-            errorMsg = messageSource.getMessage(messageKeyToUse, null, locale);
-        } catch (NoSuchMessageException e) {
-            // Если по какой-то причине сообщение не найдено даже для разрешенного ключа,
-            // логируем это (используя очищенный пользовательский код для контекста)
-            // и возвращаем сообщение по умолчанию.
-            logger.debug("Message not found for determined key: {} (original sanitized code: {}), using default", messageKeyToUse, sanitizedCodeForLog);
             errorMsg = messageSource.getMessage(defaultKey, null, defaultMessage, locale);
+        } catch (NoSuchMessageException e) {
+            // Это маловероятно, если defaultKey всегда существует, но на всякий случай.
+            logger.error("Default message key '{}' not found, using hardcoded default message.", defaultKey);
+            errorMsg = defaultMessage; // Если даже defaultKey не найден, используем жестко закодированное сообщение.
         } catch (Exception e) {
             // Общая обработка других возможных исключений при получении сообщения.
-            logger.error("An unexpected error occurred while retrieving message for key: {} (original sanitized code: {}): {}", messageKeyToUse, sanitizedCodeForLog, e.getMessage(), e);
-            errorMsg = messageSource.getMessage(defaultKey, null, defaultMessage, locale);
+            logger.error("An unexpected error occurred while retrieving default message for key '{}': {}", defaultKey, e.getMessage(), e);
+            errorMsg = defaultMessage;
         }
 
-        logger.warn("OAuth2 authentication error occurred");
+        logger.warn("OAuth2 authentication error occurred.");
 
-        // Логирование оригинального кода (очищенного для лога) для отладки.
-        if (logger.isDebugEnabled() && code != null) {
-            logger.debug("Original OAuth2 error code received (sanitized for log): {}", sanitizedCodeForLog);
+        // Логируем дополнительную информацию об ошибке, если код известен.
+        if (logger.isDebugEnabled()) {
+            if (isKnownErrorCode) {
+                // Логируем известный код ошибки (очищенный).
+                logger.debug("Received known OAuth2 error code: {}. Displaying generic error message.", sanitizedCodeForLog);
+            } else {
+                // Логируем неизвестный или некорректный код ошибки (очищенный).
+                logger.debug("Received unknown or invalid OAuth2 error code: {}. Displaying generic error message.", sanitizedCodeForLog);
+            }
         }
 
         return ResponseEntity
