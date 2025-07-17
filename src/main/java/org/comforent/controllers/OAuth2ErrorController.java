@@ -38,7 +38,14 @@ public class OAuth2ErrorController {
             errorMsg = messageSource.getMessage("oauth2.error.default", null, "OAuth2 authorization failed", locale);
         }
 
+        // Безопасный лог (не включает код напрямую)
         logger.warn("OAuth2 authentication error occurred");
+
+        // Логирование кода — ТОЛЬКО В DEBUG, с очисткой
+        if (logger.isDebugEnabled() && code != null) {
+            String sanitizedCode = code.replaceAll("[\n\r\t]", "_");
+            logger.debug("Received OAuth2 error code: {}", sanitizedCode);
+        }
 
         return ResponseEntity
             .status(HttpStatus.UNAUTHORIZED)
