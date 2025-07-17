@@ -35,7 +35,7 @@ public class OAuth2ErrorController {
         this.messageSource = messageSource;
     }
 
-    @SuppressWarnings("squid:S5147") // Подавляем предыдущее предупреждение SonarQube о Log Injection
+    @SuppressWarnings("squid:S5147") // Подавляем предупреждение SonarQube о Log Injection, так как это ложное срабатывание
     @GetMapping("/error")
     public ResponseEntity<Map<String, String>> handleError(@RequestParam(required = false) String code,
                                                            Locale locale) {
@@ -57,18 +57,17 @@ public class OAuth2ErrorController {
         // В этой версии мы ВСЕГДА будем использовать defaultKey для получения сообщения от MessageSource.
         // Это полностью исключает возможность передачи пользовательского ввода в качестве ключа.
         try {
+            // Эта строка является источником ложного срабатывания SonarQube.
+            // Однако, defaultKey и defaultMessage являются жестко закодированными и безопасными.
             errorMsg = messageSource.getMessage(defaultKey, null, defaultMessage, locale);
         } catch (NoSuchMessageException e) {
             // Это маловероятно, если defaultKey всегда существует, но на всякий случай.
             logger.error("Default message key '{}' not found, using hardcoded default message.", defaultKey);
-            // errorMsg уже инициализирован defaultMessage, поэтому явное присвоение здесь не строго обязательно,
-            // но для ясности можно оставить.
-            // errorMsg = defaultMessage;
+            // errorMsg уже инициализирован defaultMessage.
         } catch (Exception e) {
             // Общая обработка других возможных исключений при получении сообщения.
             logger.error("An unexpected error occurred while retrieving default message for key '{}': {}", defaultKey, e.getMessage(), e);
             // errorMsg уже инициализирован defaultMessage.
-            // errorMsg = defaultMessage;
         }
 
         logger.warn("OAuth2 authentication error occurred.");
