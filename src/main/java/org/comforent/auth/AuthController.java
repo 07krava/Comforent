@@ -4,7 +4,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.comforent.exceptions.exceptions.EmailAlreadyExistsException;
-import org.comforent.exceptions.exceptions.InvalidAuthenticationCredentialException;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,19 +29,9 @@ public class AuthController {
         }
     }
 
-//    @PostMapping("/login")
-//    public ResponseEntity<Object> authenticate(@Valid @RequestBody AuthenticationRequest request) {
-//        try {
-//            AuthenticationResponse response = authService.authenticate(request);
-//            return ResponseEntity.ok(response);
-//        } catch (InvalidAuthenticationCredentialException e) {
-//            return ResponseEntity.badRequest().body("Invalid credentials.");
-//        }
-//    }
-
     @PostMapping("/login")
     public ResponseEntity<Object> login(@Valid @RequestBody AuthenticationRequest request, HttpServletResponse response) {
-        AuthenticationResponse authResponse = authService.authenticate(request, response);
+        authService.authenticate(request, response);
         return ResponseEntity.ok().body(Map.of("email", request.getEmail()));
     }
 

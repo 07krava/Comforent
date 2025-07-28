@@ -62,38 +62,16 @@ public class AuthService {
             .orElseThrow(() -> new InvalidAuthenticationCredentialException("User not found after authentication."));
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRolesAsStrings());
-
-        // ✅ СОЗДАЁМ JWT cookie
         ResponseCookie jwtCookie = ResponseCookie.from("jwt_token", token)
             .httpOnly(true)
-            .secure(false) // в проде поставить true
+            .secure(true)
             .path("/")
             .maxAge(24 * 60 * 60) // 1 день
             .sameSite("Lax")
             .build();
 
-        // ✅ ДОБАВЛЯЕМ cookie в ответ
         response.addHeader("Set-Cookie", jwtCookie.toString());
 
-        // можно ничего не возвращать или только user info (если нужно)
         return AuthenticationResponse.builder().build();
     }
-
-
-//    public AuthenticationResponse authenticate(AuthenticationRequest request) {
-//        authenticationManager.authenticate(
-//            new UsernamePasswordAuthenticationToken(
-//                request.getEmail(),
-//                request.getPassword()
-//            )
-//        );
-
-//        User user = userRepository.findByEmail(request.getEmail())
-//            .orElseThrow(() -> new InvalidAuthenticationCredentialException("User not found after authentication."));
-//
-//        String token = jwtUtil.generateToken(user.getEmail(), user.getRolesAsStrings());
-//        return AuthenticationResponse.builder()
-//            .token(token)
-//            .build();
-//    }
 }
