@@ -66,7 +66,7 @@ public class AuthService {
             .httpOnly(true)
             .secure(true)
             .path("/")
-            .maxAge(24 * 60 * 60) // 1 день
+            .maxAge(24L * 60 * 60) // 1 день
             .sameSite("Lax")
             .build();
 
