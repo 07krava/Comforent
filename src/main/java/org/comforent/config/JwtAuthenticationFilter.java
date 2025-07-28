@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -49,19 +50,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
 
-        // 3. Проверяем токен и извлекаем пользователя
+        // 3. Проверяем JWT и извлекаем пользователя
         if (jwt != null && jwtUtil.validateToken(jwt)) {
             username = jwtUtil.getUsernameFromToken(jwt);
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                var userDetails = userDetailsService.loadUserByUsername(username);
+                try {
+                    var userDetails = userDetailsService.loadUserByUsername(username);
 
-                if (jwtUtil.validateToken(jwt)) {
+                    // 💡 validateToken уже был вызван выше — повторно не нужно
                     var authToken = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities()
                     );
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+
+                } catch (UsernameNotFoundException ex) {
+                    logger.warn("JWT valid but user not found: {}");
                 }
             }
         }

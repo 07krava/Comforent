@@ -31,19 +31,22 @@ public class SecurityConfig {
     private final CustomUserDetailsService userDetailsService;
     private final OAuth2AuthenticationSuccessHandler successHandler;
     private final MessageSource messageSource;
+    private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
 
     public SecurityConfig(
         JwtAuthenticationFilter jwtAuthFilter,
         CustomOAuth2UserService oAuth2UserService,
         CustomUserDetailsService userDetailsService,
         OAuth2AuthenticationSuccessHandler successHandler,
-        MessageSource messageSource
+        MessageSource messageSource,
+        RestAuthenticationEntryPoint restAuthenticationEntryPoint
     ) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.oAuth2UserService = oAuth2UserService;
         this.userDetailsService = userDetailsService;
         this.successHandler = successHandler;
         this.messageSource = messageSource;
+        this.restAuthenticationEntryPoint = restAuthenticationEntryPoint;
     }
 
     @Bean
@@ -55,6 +58,9 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint(restAuthenticationEntryPoint) // <-- добавьте эту строку
+            )
             .oauth2Login(oauth -> oauth
                 .userInfoEndpoint(user -> user.userService(oAuth2UserService))
                 .successHandler(successHandler)

@@ -13,6 +13,7 @@ import {
 import Footer from '../../Footer/Footer';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import { validateEmail, validatePassword } from '../../../utils/validations';
 
 const PageWrapper = styled(Box)(() => ({
   display: 'flex',
@@ -71,8 +72,22 @@ const GoogleButton = styled(Button)(() => ({
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  const handleEmailChange = (e) => {
+    const value = e.target.value;
+    setEmail(value);
+    setEmailError(validateEmail(value));
+  };
+
+  const handlePasswordChange = (e) => {
+    const value = e.target.value;
+    setPassword(value);
+    setPasswordError(validatePassword(value));
+  };
 
   const handleSignIn = async (e) => {
     e.preventDefault();
@@ -81,11 +96,12 @@ export default function SignIn() {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // 🔥 обязательно!
         body: JSON.stringify(requestBody),
       });
       if (response.ok) {
         const data = await response.json();
-        localStorage.setItem('jwt_token', data.token);
+        // localStorage.setItem('jwt_token', data.token);
         alert('Login successful!');
         window.location.href = '/user-home';
       } else {
@@ -123,13 +139,17 @@ export default function SignIn() {
           <TextFieldStyle
             placeholder="Enter your email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={handleEmailChange}
+            error={!!emailError}
+            helperText={emailError}
           />
           <TextFieldStyle
             placeholder="Enter your password"
             type={showPassword ? 'text' : 'password'}
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={handlePasswordChange}
+            error={!!passwordError}
+            helperText={passwordError}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
