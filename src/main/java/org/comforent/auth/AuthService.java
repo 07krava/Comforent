@@ -1,10 +1,14 @@
 package org.comforent.auth;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.comforent.config.JwtUtil;
 import org.comforent.entity.User;
 import org.comforent.enums.Role;
+import org.comforent.exceptions.exceptions.EmailAlreadyExistsException;
+import org.comforent.exceptions.exceptions.InvalidAuthenticationCredentialException;
 import org.comforent.repository.UserRepository;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,7 +30,7 @@ public class AuthService {
 
         Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
         if (existingUser.isPresent()) {
-            throw new RuntimeException("User with this email already exists.");
+            throw new EmailAlreadyExistsException("User with this email already exists.");
         }
 
         User user = User.builder()
@@ -46,7 +50,7 @@ public class AuthService {
             .build();
     }
 
-    public AuthenticationResponse authenticate(AuthenticationRequest request) {
+    public AuthenticationResponse authenticate(AuthenticationRequest request, HttpServletResponse response) {
         authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(
                 request.getEmail(),
@@ -55,11 +59,19 @@ public class AuthService {
         );
 
         User user = userRepository.findByEmail(request.getEmail())
-            .orElseThrow(() -> new RuntimeException("User not found after authentication."));
+            .orElseThrow(() -> new InvalidAuthenticationCredentialException("User not found after authentication."));
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRolesAsStrings());
-        return AuthenticationResponse.builder()
-            .token(token)
+        ResponseCookie jwtCookie = ResponseCookie.from("jwt_token", token)
+            .httpOnly(true)
+            .secure(true)
+            .path("/")
+            .maxAge(24L * 60 * 60) // 1 день
+            .sameSite("Lax")
             .build();
+
+        response.addHeader("Set-Cookie", jwtCookie.toString());
+
+        return AuthenticationResponse.builder().build();
     }
 }

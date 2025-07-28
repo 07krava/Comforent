@@ -6,6 +6,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
@@ -28,7 +29,7 @@ public class JwtUtil {
         return Jwts.builder()
             .setSubject(username)
             .setIssuer("mujwttoken")
-            .claim("roles", roles)  // записываем роли в токен
+            .claim("roles", roles)
             .setIssuedAt(new Date())
             .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
             .signWith(getSigningKey(), SignatureAlgorithm.HS256)
@@ -43,9 +44,13 @@ public class JwtUtil {
                 .parseClaimsJws(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
-            // логировать ошибку
             return false;
         }
+    }
+
+    public boolean validateToken(String token, UserDetails userDetails) {
+        final String username = getUsernameFromToken(token);
+        return (username.equals(userDetails.getUsername()) && validateToken(token));
     }
 
     public String getUsernameFromToken(String token) {
