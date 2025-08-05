@@ -26,28 +26,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void uploadProfilePicture(Long userId, MultipartFile file) {
-//        try {
-//            String key = userId + "/" + file.getOriginalFilename();
-//            byte[] content = file.getBytes();
-//
-//            // Загрузка и получение публичного URL
-//            String fileUrl = storageService.upload(key, content);
-//
-//            User user = userRepository.findById(userId)
-//                .orElseThrow(() -> new RuntimeException("User not found"));
-//
-//            user.setProfilePicture(fileUrl);
-//            userRepository.save(user);
-//
-//            log.info("Uploaded and saved profile picture for userId={} url={}", userId, fileUrl);
-//
-//        } catch (IOException e) {
-//            log.error("Failed to read uploaded file", e);
-//            throw new FailedFileDownloadException("Не удалось прочитать файл для загрузки.");
-//        } catch (S3Exception e) {
-//            log.error("S3 upload failed: {}", e.getMessage(), e);
-//            throw new UploadingFileToStorageException("Ошибка при загрузке файла в хранилище.");
-//        }
+
         try {
             User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
