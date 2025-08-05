@@ -4,8 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.ObjectCannedACL;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 @Service
 @RequiredArgsConstructor
@@ -14,13 +16,44 @@ public class CloudflareStorageService {
     private final CloudflareR2Properties props;
 
     public String upload(String key, byte[] content) {
+
+        if (exists(key)) {
+            return props.getPublicUrl() + "/" + key; // не загружаем дубликат
+        }
+
+        try {
         r2Client.putObject(PutObjectRequest.builder()
                 .bucket(props.getBucket())
                 .key(key)
                 .acl(ObjectCannedACL.PUBLIC_READ)
                 .build(),
             RequestBody.fromBytes(content));
-
+        } catch (Exception e) {
+            e.printStackTrace(); // Покажет причину (например, 403, timeout, DNS и т.п.)
+            throw e;
+        }
         return props.getPublicUrl() + "/" + key;
+    }
+
+    public boolean exists(String key) {
+        try {
+            r2Client.headObject(HeadObjectRequest.builder()
+                .bucket(props.getBucket())
+                .key(key)
+                .build());
+            return true;
+        } catch (S3Exception e) {
+            return false;
+        }
+    }
+
+    public String uploadAvatar(String email, String filename, byte[] content) {
+        String key = email + "/avatar/" + filename;
+        return upload(key, content);
+    }
+
+    public String uploadHousingPhoto(String email, String filename, byte[] content) {
+        String key = email + "/housings/" + filename;
+        return upload(key, content);
     }
 }

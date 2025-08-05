@@ -9,7 +9,7 @@ const MainDiv = styled('div')(({ theme }) => ({
   height: '100px',
 }))
 
-export default function HeaderRegister() {
+export default function AccountSettingsHeader() {
   return (
     <div>
       <MainDiv>
@@ -18,7 +18,7 @@ export default function HeaderRegister() {
           padding: '25px',
           paddingTop: '40px',          
         }}>
-          <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+          <Link to="/user-home" style={{ textDecoration: 'none', color: 'inherit' }}>
           <Typography style={{
         fontWeight: '600',
         fontSize: '20px',

@@ -54,12 +54,14 @@ public class SecurityConfig {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/oauth2/**", "/login/oauth2/**").permitAll()
+                .requestMatchers("/api/auth/**", "/oauth2/**", "/login/oauth2/**", "/upload-profile-picture").permitAll()
+                .requestMatchers("/api/users/me/**").authenticated()  // обязательная авторизация
+                .requestMatchers("/api/users/**").permitAll() // остальные можно открыть, если нужно
                 .anyRequest().authenticated()
             )
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .exceptionHandling(ex -> ex
-                .authenticationEntryPoint(restAuthenticationEntryPoint) // <-- добавьте эту строку
+                .authenticationEntryPoint(restAuthenticationEntryPoint)
             )
             .oauth2Login(oauth -> oauth
                 .userInfoEndpoint(user -> user.userService(oAuth2UserService))

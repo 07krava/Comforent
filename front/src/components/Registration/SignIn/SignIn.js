@@ -101,7 +101,6 @@ export default function SignIn() {
       });
       if (response.ok) {
         const data = await response.json();
-        // localStorage.setItem('jwt_token', data.token);
         alert('Login successful!');
         window.location.href = '/user-home';
       } else {

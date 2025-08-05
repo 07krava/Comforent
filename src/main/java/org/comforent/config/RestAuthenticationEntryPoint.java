@@ -17,6 +17,8 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
                          AuthenticationException authException) throws IOException {
         String path = request.getRequestURI();
 
+        System.out.println("❗ RestAuthenticationEntryPoint сработал. Путь: " + path);
+
         if (path.startsWith("/api/")) {
             // REST API — возвращаем 401 без редиректа
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");

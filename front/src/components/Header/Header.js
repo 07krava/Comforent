@@ -45,6 +45,30 @@ const Presentation = styled('div')({
   top: '100px',
 });
 
+const menuStyles = {
+  mt: 1.5,
+  overflow: 'visible',
+  filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
+  '& .MuiAvatar-root': {
+    width: 32,
+    height: 32,
+    ml: -0.5,
+    mr: 1,
+  },
+  '&:before': {
+    content: '""',
+    display: 'block',
+    position: 'absolute',
+    top: 0,
+    right: 14,
+    width: 10,
+    height: 10,
+    bgcolor: 'background.paper',
+    transform: 'translateY(-50%) rotate(45deg)',
+    zIndex: 0,
+  },
+};
+
 export default function Header({ isUserHome = false, user = null, onLogout }) {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
@@ -54,11 +78,16 @@ export default function Header({ isUserHome = false, user = null, onLogout }) {
   };
 
   const handleMenuClose = () => {
+    // Убираем фокус ДО закрытия меню
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+
     setAnchorEl(null);
   };
 
   const handleAccountClick = () => {
-    navigate('/account');
+    navigate('/account_settings');
     handleMenuClose();
   };
 
@@ -79,17 +108,19 @@ export default function Header({ isUserHome = false, user = null, onLogout }) {
     navigate('/create_housing');
   };
 
+  const open = Boolean(anchorEl);
+
   return (
     <header>
       <div>
         <Logo>Site logo</Logo>
 
-        <StyleHeader spacing={2} direction="row"  alignItems="center">
+        <StyleHeader spacing={2} direction="row" alignItems="center">
           {isUserHome && user ? (
             <>
-            <StyleButton variant="text" onClick={handleRentOutClick} sx={{position: 'relative', top: '-13px'}}>
+              <StyleButton variant="text" onClick={handleRentOutClick} sx={{ position: 'relative', top: '-13px' }}>
                 Rent out
-            </StyleButton>
+              </StyleButton>
               {user.profilePicture ? (
                 <Avatar
                   src={user.profilePicture}
@@ -100,7 +131,7 @@ export default function Header({ isUserHome = false, user = null, onLogout }) {
               ) : (
                 <Avatar
                   onClick={handleAvatarClick}
-                  sx={{ cursor: 'pointer', bgcolor: 'grey.400', position: 'relative', top: '-13px'}}
+                  sx={{ cursor: 'pointer', bgcolor: 'grey.400', position: 'relative', top: '-13px' }}
                 >
                   <AccountCircleIcon fontSize="large" />
                 </Avatar>
@@ -108,8 +139,24 @@ export default function Header({ isUserHome = false, user = null, onLogout }) {
 
               <Menu
                 anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
+                id="account-menu"
+                open={open}
                 onClose={handleMenuClose}
+                onClick={handleMenuClose}
+                PaperProps={{
+                  elevation: 4,
+                  sx: menuStyles,
+                }}
+                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+
+                // 🔧 Отключаем автофокус, чтобы избежать фокуса в aria-hidden
+                disableAutoFocusItem
+                disableEnforceFocus
+                disableRestoreFocus
+                MenuListProps={{
+                  autoFocus: false,
+                }}
               >
                 <MenuItem onClick={handleAccountClick}>Account Settings</MenuItem>
                 <MenuItem onClick={handleLogoutClick}>Logout</MenuItem>

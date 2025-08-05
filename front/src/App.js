@@ -8,6 +8,7 @@ import RentOut from './pages/RentOut';
 import OAuth2Error from './components/errors/OAuth2Error';
 import OAuth2RedirectHandler from './components/Registration/OAuth2Redirect/OAuth2RedirectHandler'; 
 import UserHomePage from './pages/UserHomePage';
+import AccountSetting from './pages/AccountSettings';
 
 
 const theme = createTheme();
@@ -29,6 +30,7 @@ function App() {
           <Route path="/create_housing" element={<RentOut />} />
           <Route path="/oauth2/error" element={<OAuth2Error />} />
           <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
+          <Route path="/account_settings" element={<AccountSetting />} />
           {/* <Route path="/show-housings" element={<ShowHousings/>} /> */}
         </Routes>
       </Router>

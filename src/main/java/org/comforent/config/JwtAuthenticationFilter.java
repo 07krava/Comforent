@@ -26,7 +26,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain)
         throws ServletException, IOException {
 
         String jwt = null;
@@ -36,6 +38,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             jwt = authHeader.substring(7);
+            logger.info("📦 JWT из заголовка Authorization: " + jwt);
         }
 
         // 2. Если в заголовке нет — пробуем достать из cookie
@@ -47,12 +50,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     .map(Cookie::getValue)
                     .findFirst()
                     .orElse(null);
+
+                if (jwt != null) {
+                    logger.info("📦 JWT из cookie: " + jwt);
+                }
             }
         }
 
         // 3. Проверяем JWT и извлекаем пользователя
         if (jwt != null && jwtUtil.validateToken(jwt)) {
             username = jwtUtil.getUsernameFromToken(jwt);
+            logger.info("✅ JWT валиден. Пользователь: " + username);
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 try {
@@ -65,10 +73,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
 
+                    logger.info("🔐 Аутентификация установлена для пользователя: " + username);
                 } catch (UsernameNotFoundException ex) {
-                    logger.warn("JWT valid but user not found: {}");
+                    logger.warn("❌ JWT валиден, но пользователь не найден: " + username);
                 }
             }
+        } else {
+            logger.warn("❌ JWT НЕвалиден или отсутствует.");
         }
 
         filterChain.doFilter(request, response);
