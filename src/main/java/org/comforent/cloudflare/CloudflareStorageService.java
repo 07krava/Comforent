@@ -21,17 +21,13 @@ public class CloudflareStorageService {
             return props.getPublicUrl() + "/" + key; // не загружаем дубликат
         }
 
-        try {
         r2Client.putObject(PutObjectRequest.builder()
                 .bucket(props.getBucket())
                 .key(key)
                 .acl(ObjectCannedACL.PUBLIC_READ)
                 .build(),
             RequestBody.fromBytes(content));
-        } catch (Exception e) {
-            e.printStackTrace(); // Покажет причину (например, 403, timeout, DNS и т.п.)
-            throw e;
-        }
+
         return props.getPublicUrl() + "/" + key;
     }
 
