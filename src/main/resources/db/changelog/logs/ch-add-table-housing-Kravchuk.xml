@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="1-create-table-housing" author="kravchuk">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="housing"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="housing">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="price" type="DECIMAL(19,2)"/>
+
+            <column name="quantity_bedrooms" type="INT"/>
+
+            <column name="quantity_beds" type="INT"/>
+
+            <column name="quantity_bathrooms" type="INT"/>
+
+            <column name="description" type="TEXT"/>
+
+            <column name="title" type="VARCHAR(255)"/>
+
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="max_amount_people" type="INT"/>
+
+            <column name="housing_type" type="VARCHAR(50)"/>
+
+            <column name="owner_id" type="BIGINT"/>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="housing"
+                baseColumnNames="owner_id"
+                constraintName="fk_housing_owner"
+                referencedTableName="users"
+                referencedColumnNames="id"/>
+    </changeSet>
+</databaseChangeLog>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="1-create-table-photo" author="kravchuk">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="photo"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="photo">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="file_name" type="VARCHAR(255)"/>
+            <column name="filePath" type="VARCHAR(500)"/>
+
+            <column name="housing_id" type="BIGINT">
+                <constraints nullable="true" foreignKeyName="fk_photo_housing"
+                             referencedTableName="housing" referencedColumnNames="id"/>
+            </column>
+
+            <column name="property_id" type="BIGINT">
+                <constraints nullable="true" foreignKeyName="fk_photo_property"
+                             referencedTableName="property" referencedColumnNames="id"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_photo_housing" tableName="photo">
+            <column name="housing_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_photo_property" tableName="photo">
+            <column name="property_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

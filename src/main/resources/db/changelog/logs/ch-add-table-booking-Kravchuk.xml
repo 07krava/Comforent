@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="1-create-table-booking" author="kravchuk">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="booking"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="booking">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="housing_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_booking_housing"
+                             referencedTableName="housing" referencedColumnNames="id"/>
+            </column>
+
+            <column name="startDate" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="endDate" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="guests" type="INT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="owner_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_booking_owner"
+                             referencedTableName="users" referencedColumnNames="id"/>
+            </column>
+
+            <column name="renter_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_booking_renter"
+                             referencedTableName="users" referencedColumnNames="id"/>
+            </column>
+
+            <column name="total_amount" type="DECIMAL(19,2)"/>
+
+            <column name="currency" type="VARCHAR(10)"/>
+
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_booking_housing" tableName="booking">
+            <column name="housing_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_booking_owner" tableName="booking">
+            <column name="owner_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_booking_renter" tableName="booking">
+            <column name="renter_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

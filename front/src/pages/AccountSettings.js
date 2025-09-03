@@ -13,7 +13,7 @@ export default function AccountSetting() {
 
   // Получаем текущий userId и аватар с backend
   useEffect(() => {
-    axios.get('/api/user/me', {
+    axios.get('/api/users/me', {
       withCredentials: true, // чтобы отправить cookie
     })
     .then(res => {

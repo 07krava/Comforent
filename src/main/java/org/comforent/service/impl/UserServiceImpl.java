@@ -43,7 +43,7 @@ public class UserServiceImpl implements UserService {
 
             // если файл уже существует, не загружаем его повторно
             if (storageService.exists(key)) {
-                log.info("Файл уже существует: {}", key);
+                log.info("The file already exists: {}", key);
                 return;
             }
 
@@ -121,16 +121,16 @@ public class UserServiceImpl implements UserService {
     }
 
     public void uploadHousingPhotoByEmail(String email, MultipartFile file) throws IOException {
-        User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new EntityNotFoundException("User not found"));
+//        User user = userRepository.findByEmail(email)
+//            .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         String filename = file.getOriginalFilename();
         byte[] content = file.getBytes();
 
         String url = storageService.uploadHousingPhoto(email, filename, content);
-        // Тут нужно либо сохранять фото в таблице Housing, либо возвращать URL
-        // Временно выведем в лог:
-        System.out.println("Housing photo uploaded to: " + url);
+
+        //TODO: Either save photo in Housing table or return URL
+        log.info("Housing photo uploaded to: {}", url);
     }
 
     public String getProfilePictureByEmail(String email) {
@@ -139,3 +139,5 @@ public class UserServiceImpl implements UserService {
         return user.getProfilePicture();
     }
 }
+
+
